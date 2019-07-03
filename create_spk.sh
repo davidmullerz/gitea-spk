@@ -8,7 +8,7 @@ select_binary()
 
     if [ ! "$args" = "" ]; then
         if [ -f $args ]; then
-            binary=$args
+            binary=$(readlink -f $args)
         else
             echo "$1 not found"
             exit 1
@@ -31,7 +31,7 @@ get_version()
 {
     local binary="$1"
 
-    echo ${binary} | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'
+    basename ${binary} | sed 's/[^0-9.]*\([0-9.]*\).*/\1/'
 }
 
 
@@ -40,7 +40,7 @@ get_platform()
 {
     local binary="$1"
 
-    echo ${binary} | sed 's/.*linux-\(.*\)/\1/'
+    basename ${binary} | sed 's/.*linux-\(.*\)/\1/'
 }
 
 
@@ -48,10 +48,10 @@ get_platform()
 get_arch()
 {
     local binary="$1"
-    local platform=`get_platform $binary`
+    local platform=`get_platform ${binary}`
 
     # lookup the arch values for the given platform in the mappings file
-    grep "^$platform " 'arch.desc' | awk '{for (i=2; i<=NF; i++) printf "%s ", $i}' | xargs
+    grep "^$platform " "arch.desc" | awk '{for (i=2; i<=NF; i++) printf "%s ", $i}' | xargs
 }
 
 
@@ -62,7 +62,7 @@ update_metadata()
     local arch="$2"
 
     if [ "$arch" = "" ]; then
-        echo "$binary is not a supported platform"
+        echo "${binary} is not a supported platform"
         exit 1
     fi
 
@@ -78,6 +78,7 @@ build()
 {
     local current=$PWD
     local binary=$1
+    local spk=$2
 
     version=`get_version $binary`
     arch=`get_arch $binary`
@@ -86,16 +87,17 @@ build()
 
     chmod +x $binary
     mkdir -p 1_create_package/gitea
-    ln -sf "$PWD/$binary" 1_create_package/gitea/gitea
+    ln -sf $binary 1_create_package/gitea/gitea
     cd 1_create_package
     tar cvfhz ../2_create_project/package.tgz *
     cd ../2_create_project/
-    tar cvfz ../$binary.spk --exclude=INFO.in *
+    tar cvfz ${spk} --exclude=INFO.in *
     rm -f package.tgz
     cd $current
 }
 
 
 binary=`select_binary $@`
+spk=${binary}.spk
 
-build "$binary"
+build ${binary} ${spk}

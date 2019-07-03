@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ -d /data ]; then
+    cd /opt/gitea-spk/
+    ./create_spk.sh /data/$1
+else
+    echo 'Run container with "-v $PWD:/data"'
+fi
