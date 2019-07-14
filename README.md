@@ -1,57 +1,51 @@
-# gogs-spk
+# gitea-spk
 
-[Gogs](https://gogs.io) (Go Git Service) SPK package ([Synology PacKages](https://www.synology.com/en-us/dsm/app_packages))
+Fork from [gogs-spk](https://github.com/alexandregz/gogs-spk) to create a SPK package for [Gitea](https://github.com/go-gitea/gitea), a [Gogs](https://gogs.io/) fork.
 
-Install Gogs into a Synology NAS.
+### Dependencies
 
-## Requirements
+The Gitea package requires the **[Git Server](https://www.synology.com/en-global/dsm/packages/Git)** package.
 
-<sub>this package, to see Gogs requirements check https://gogs.io</sub>
+### Package creation
 
-* armv7 (Tested only with DS213j, Marvell Armada 370)
-* MariaDB
-* Git Server
+To create the package, clone the repository:
 
-## Usage
+`$ git clone https://github.com/flipswitchingmonkey/gitea-spk.git`
 
-Change **Package Center -> Trust Level** to **Any Publisher** and import manually the package from **Manual install**.
-Finally, install with Gogs web installation.
+Change into the newly created directory - the root directory:
 
-## To use with another arch
+`$ cd gitea-spk`
 
-Download the binary from https://gogs.io/docs/installation/install_from_binary, replace the content from **1_create_package/gogs** directory and exec create_spk.sh:
+Download the Gitea binary matching your architecture from https://github.com/go-gitea/gitea/releases into the root directory. For example, a DiskStation with an ARMv7 CPU would require:
 
-```alex@vostok:/Volumes/HD/Development/synology/gogs-spk(master)$ rm -rf 1_create_package/gogs/ && tar zxvf gogs_v0.9.13_linux_386.tar.gz -C 1_create_package/```
+`$ wget https://github.com/go-gitea/gitea/releases/download/v1.1.4/gitea-1.1.4-linux-arm-7`
 
-```$ sh create_spk.sh```
+Invoke the build script to have the package created:
 
+`$ ./create_spk.sh`
 
-## Compiled from source
+The install package matching your binary (here `gitea-1.1.4-linux-arm-7.spk`) will be created in the root directory.
 
-Suggested by [hirakujira](https://github.com/hirakujira)
+If you have several binaries downloaded, you can specify the binary for which the package should be created:
 
-```
-GOOS=linux GOARCH=arm GOARM=7 go get -u github.com/gogits/gogs
-```
+`$ ./create_spk.sh gitea-1.1.3-linux-arm-7`
 
+### Installation
 
-## Screenshots
+Make sure **Package Center > Settings > General > Trust Level** is set to **Any Publisher** and perform installation via **Package Center > Manual Install**.
 
-![Install](screenshots/install2.png)
+![Select Package](screenshots/install_select_package.png)
 
-![Install](screenshots/install.png)
+The installer will create the (internal) user/group gitea:gitea when not found and the executable is run with this user.
 
-![Stopping](screenshots/stopping.png)
+![Select Package](screenshots/install_running.png)
 
-![Desktop icon](screenshots/icon.png)
+When installation has finished, the package center shows url and status of your Gitea server.
 
+When accessed for the first time, Gitea will greet you with the installation settings. You should set your **Repository Root Path** to a shared folder. You can configure permissions for shared folders in the control panel via **Edit > Permissions > System internal user** to grant the Gitea user permission.
 
-Gogs screenshots
-https://github.com/gogits/gogs
+Tested to work on DS116 with Gitea 1.0.1.
 
+### Acknowledgements
 
-## ToDo
-
-- Don't force to use Git Server and MariaDB (PostgreSQL? Gogs ARM version haven't Sqlite/TiDB)
-- Support to archs (and DBs)
-- Don't use **root** user and create and use **gogs** user, if possible
+Original code copyright (c) 2016 Alexandre Espinosa Menor
