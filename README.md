@@ -1,5 +1,10 @@
 # gitea-spk
 
+[![made-for-VSCode](https://img.shields.io/badge/Made%20for-Synology%20NAS-1f425f.svg)](https://www.synology.com/)
+[![](https://images.microbadger.com/badges/version/rene2/create-spk.svg)](https://hub.docker.com/r/rene2/create-spk "Go to Docker Hub")
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](http://www.opensource.org/licenses/mit-license.php)
+
+
 Fork [flipswitchingmonkey](https://github.com/flipswitchingmonkey/gitea-spk) to create a SPK package for [Gitea](https://github.com/go-gitea/gitea), a [Gogs](https://gogs.io/) fork.
 
 This version uses [Docker](https://www.docker.com) to run the creation script.
