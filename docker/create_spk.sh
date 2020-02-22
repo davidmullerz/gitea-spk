@@ -1,27 +1,39 @@
 #!/bin/sh
 
+set -e
+
 # Determines the binary for which the package should be build.
 select_binary()
 {
     local args=$1
     local binary=""
 
-    if [ ! "$args" = "" ]; then
-        if [ -f $args ]; then
-            binary=$(readlink -f $args)
-        else
-            echo "$1 not found"
+    if [ "${args##http}" != "$args" ]; then
+        cd /tmp
+        binary=$(curl -w '%{filename_effective}' -OskL $args)
+        if [ ! $? -eq 0 ]; then
+            echo >&2 "Error: cannot download $1"
             exit 1
         fi
-    else
+        case $binary in
+            *.gz) gunzip $binary; binary=$(basename $binary .gz) ;;
+            *.bz2) bunzip2 $binary; binary=$(basename $binary .bz2) ;;
+            *.xz) xz -d $binary; binary=$(basename $binary .xz) ;;
+        esac
+    elif [ -d "$args" ]; then
+        cd "$args"
         # pick the latest binary
         binary=$(ls -1 -t gitea-*-linux-*[!.spk] 2>/dev/null | head -1)
-
         if [ ! $? -eq 0 ]; then
-            echo "No gitea binary found. Please download a binary from https://github.com/go-gitea/gitea/releases"
+            echo >&2 "No gitea binary found. Please download a binary from https://github.com/go-gitea/gitea/releases"
             exit 1
         fi
+    elif [ ! -f "$args" ]; then
+        echo >&2 "Error: $args not found"
+        exit 1
     fi
+
+    binary=$(readlink -f $binary)
     echo "$binary"
 }
 
@@ -80,24 +92,36 @@ build()
     local binary=$1
     local spk=$2
 
+    cd $(dirname $0)
+
     version=`get_version $binary`
     arch=`get_arch $binary`
+
+    echo "binary: $binary"
+    echo "version: $version"
+    echo "arch: $arch"
 
     update_metadata "$version" "$arch"
 
     chmod +x $binary
     mkdir -p 1_create_package/gitea
     ln -sf $binary 1_create_package/gitea/gitea
+
     cd 1_create_package
-    tar cvfhz ../2_create_project/package.tgz *
+    tar cfhz ../2_create_project/package.tgz *
+
     cd ../2_create_project/
-    tar cvfz ${spk} --exclude=INFO.in *
+    tar cfz ${spk} --exclude=INFO.in *
+
     rm -f package.tgz
     cd $current
 }
 
 
-binary=`select_binary $@`
-spk=${binary}.spk
+binary=$(select_binary $1)
+spk=/spk/$(basename ${binary}).spk
 
 build ${binary} ${spk}
+
+chown ${UID:-0} ${spk}
+ls -l ${spk}
